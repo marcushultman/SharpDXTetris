@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Package xmlns="http://schemas.microsoft.com/appx/2010/manifest">
+  <Identity Name="4f900b46-8969-44c3-8cd9-97271d2c291f" Publisher="CN=Marcus" Version="1.0.0.0" />
+  <Properties>
+    <DisplayName>SharpDXTetris</DisplayName>
+    <PublisherDisplayName>$XmlEscapedPublisher$</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+  <Prerequisites>
+    <OSMinVersion>6.2.1</OSMinVersion>
+    <OSMaxVersionTested>6.2.1</OSMaxVersionTested>
+  </Prerequisites>
+  <Resources>
+    <Resource Language="x-generate" />
+  </Resources>
+  <Applications>
+    <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="SharpDXTetris.App">
+      <VisualElements DisplayName="SharpDXTetris" Logo="Assets\Logo.png" SmallLogo="Assets\SmallLogo.png" Description="SharpDXTetris" ForegroundText="light" BackgroundColor="#464646">
+        <DefaultTile ShowName="logoOnly" />
+        <SplashScreen Image="Assets\SplashScreen.png" />
+      </VisualElements>
+    </Application>
+  </Applications>
+  <Capabilities>
+    <Capability Name="internetClient" />
+  </Capabilities>
+</Package>
