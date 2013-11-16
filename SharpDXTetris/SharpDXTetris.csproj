@@ -42,6 +42,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TetrisBlock.cs" />
+    <Compile Include="TetrisModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <ToolkitModel Include="Content\Models\block.FBX" />

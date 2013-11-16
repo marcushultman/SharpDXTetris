@@ -27,19 +27,24 @@ namespace SharpDXTetris
         public float Focus { get; set; }
         private float actualFocus, focusLerpAmount = .08f;
 
+        // Time between Tick() in tetris.
         private TimeSpan blockTick = TimeSpan.FromSeconds(1);
-
         private TimeSpan currentTime = TimeSpan.Zero;
 
+        private PointerManager pointerManager;
+        private Vector2? touchStart;
+        private uint touchID;
 
         // Game entities
 
-        private LinkedList<List<TetrisBlock>> blocks;
-        private CurrentTetrisBlock currentBlock;
+        private TetrisModel tetrisModel; 
 
         // View objects
         private Matrix view, projection;
         private Model baseModel, blockModel;
+
+        // Scale our models.
+        private Matrix mirrorXZ = Matrix.Scaling(1, -1, -1);
 
 
         /// <summary>
@@ -66,7 +71,9 @@ namespace SharpDXTetris
             // Variable initialization
             Speed = .1f;
 
-            NewGame();
+            tetrisModel = new TetrisModel();
+
+            pointerManager = new PointerManager(this);
 
             base.Initialize();
         }
@@ -86,35 +93,60 @@ namespace SharpDXTetris
 
         internal void NewGame()
         {
-            blocks = new LinkedList<List<TetrisBlock>>();
-            for (int i = 0; i < 20; i++)
-                blocks.AddFirst(new List<TetrisBlock>());
 
-            currentBlock = TetrisBlockGenerator.GetBlock((int)Page.blockstyle.Value);
-            currentBlock.Position = new Vector2(0, 0);//20);
         }
 
         protected override void Update(GameTime gameTime)
         {
+            // Update our model at appropriate time.
             currentTime += gameTime.ElapsedGameTime;
             while (currentTime > blockTick)
             {
                 currentTime = currentTime.Subtract(blockTick);
-                //currentBlock.Position -= Vector2.UnitY;
-            }   
+                tetrisModel.Tick(-Vector2.UnitY);
+            }
 
-            // Use time in seconds directly
-            var time = (float)gameTime.TotalGameTime.TotalSeconds;
+            //var state = pointerManager.GetState();
+            //if (state.Points.Count > 0 && !touchStart.HasValue)
+            //{
+            //    touchStart = state.Points[0].Position;
+            //    touchID = state.Points[0].PointerId;
+            //}
+            
+            //if (touchStart.HasValue){
+            //    var current = state.Points.Find(point => point.PointerId == touchID).Position;
+            //    var diff = current - touchStart;
+            //    if (diff.Value.Length() > 100)
+            //    {
+            //        tetrisModel.Tick(diff.Value.X > 0 ? Vector2.UnitX : -Vector2.UnitX);
+            //        touchStart = null;
+            //    }
+            //}
 
+            var state = pointerManager.GetState();
+            var presses = state.Points.FindAll(p => p.EventType == PointerEventType.Pressed);
+
+            if (presses.Count > 0)
+            {
+                ;
+            }
+
+
+
+            //TODO: Remove adjustable focus
             Focus = (int)Page.focus.Value;
+
+            #region Update View
 
             // Update vertical focus
             actualFocus = MathUtil.Lerp(actualFocus, Focus, focusLerpAmount);
 
             // View matrix
-            var eye = new Vector3(0, 50, actualFocus / 1.2f + 200);
+            var eye = new Vector3(0, 50, -actualFocus / 1.2f - 200);
             var target = new Vector3(0, MathUtil.Lerp(actualFocus, 50, .5f), 0);
             view = Matrix.LookAtLH(eye, target, Vector3.Up);
+
+            #endregion
 
             base.Update(gameTime);
         }
@@ -138,15 +170,43 @@ namespace SharpDXTetris
                 baseEffect.EnableDefaultLighting();
             }
 
+            // Draw base model.
+            baseModel.Draw(GraphicsDevice, mirrorXZ, view, projection, baseEffect);
 
-            baseModel.Draw(GraphicsDevice, Matrix.RotationZ(MathUtil.Pi), view, projection, baseEffect);
+            #region Coordinate indicators
 
-            foreach (var block in currentBlock.Blocks)
+            baseEffect.DiffuseColor = Color.Red.ToVector4();
+            baseModel.Draw(GraphicsDevice, Matrix.Scaling(.1f) * Matrix.Translation(50, 0, 0), view, projection, baseEffect);
+
+            baseEffect.DiffuseColor = Color.Green.ToVector4();
+            baseModel.Draw(GraphicsDevice, Matrix.Scaling(.1f) * Matrix.Translation(0, 50, 0), view, projection, baseEffect);
+
+            baseEffect.DiffuseColor = Color.Blue.ToVector4();
+            baseModel.Draw(GraphicsDevice, Matrix.Scaling(.1f) * Matrix.Translation(0, 0, 50), view, projection, baseEffect);
+
+            #endregion
+
+
+            for (int row = 0; row < 20; row++)
             {
-                var world = Matrix.RotationY(block.Position.X * (float)Math.PI / 5f) * Matrix.Translation(0, 10 * (currentBlock.Position.Y + block.Position.Y), 0) * Matrix.RotationZ(MathUtil.Pi);
-                blockModel.ForEach(part => (part.Effect as BasicEffect).DiffuseColor = block.Color.ToVector4());
-                blockModel.Draw(GraphicsDevice, world, view, projection);
+                for (int col = 0; col < 10; col++)
+                {
+                    var block = tetrisModel.BlockAt(row, col);
+                    if (block.HasValue)
+                    {
+                        var world = Matrix.RotationY(col * (float)Math.PI / 5f) * Matrix.Translation(0, -10 * row, 0) * mirrorXZ;
+                        blockModel.ForEach(part => (part.Effect as BasicEffect).DiffuseColor = block.Value.ToVector4());
+                        blockModel.Draw(GraphicsDevice, world, view, projection);
+                    }
+                }
             }
+
+            //foreach (var block in tetrisModel.Blocks)
+            //{
+            //    var world = Matrix.RotationY(block.Position.X * (float)Math.PI / 5f) * Matrix.Translation(0, 10 * (currentBlock.Position.Y + block.Position.Y), 0) * Matrix.RotationZ(MathUtil.Pi);
+            //    blockModel.ForEach(part => (part.Effect as BasicEffect).DiffuseColor = block.Color.ToVector4());
+            //    blockModel.Draw(GraphicsDevice, world, view, projection);
+            //}
 
             
 
