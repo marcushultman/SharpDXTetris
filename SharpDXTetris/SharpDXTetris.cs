@@ -32,8 +32,9 @@ namespace SharpDXTetris
         private TimeSpan currentTime = TimeSpan.Zero;
 
         private PointerManager pointerManager;
-        private Vector2? touchStart;
-        private uint touchID;
+
+        private uint pointId;
+        private Vector2? pointStart;
 
         // Game entities
 
@@ -111,8 +112,43 @@ namespace SharpDXTetris
             var output = new StringBuilder();
 
             var state = pointerManager.GetState();
+
+            // No input
+            if (!pointStart.HasValue)
+            {
+                // Find any touch moves?
+                var point = state.Points.Find(p => p.DeviceType == PointerDeviceType.Touch && p.EventType != PointerEventType.CaptureLost);
+                if (point != null)
+                {
+                    pointId = point.PointerId;
+                    pointStart = point.Position;
+                }
+            }
+            else
+            {
+                // Get our current point
+                var point = state.Points.Find(p => p.PointerId == pointId);
+
+                var diff = point.Position - pointStart.Value;
+                if (Math.Abs(diff.X) > .2f)
+                {
+                    pointStart = point.Position;
+                    tetrisModel.Tick(diff.X > 0 ? Vector2.UnitX : -Vector2.UnitX);
+                }
+                
+                
+                // Released?
+                if (point.EventType == PointerEventType.Released ||
+                    point.EventType == PointerEventType.CaptureLost)
+                {
+                    pointStart = null;
+                }
+            }
+
+            
+
             foreach (var point in state.Points)
-                output.AppendLine(string.Format("Id:{0} Type:{1} Position:{2}", point.PointerId, point.EventType, point.Position));
+                output.AppendLine(string.Format("Id:{0} Type:{1} Position:{2} Device:{3}", point.PointerId, point.EventType, point.Position, point.DeviceType));
 
             Page.output.Text = output.ToString();
 
