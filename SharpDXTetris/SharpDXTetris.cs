@@ -28,7 +28,7 @@ namespace SharpDXTetris
         private float actualFocus, focusLerpAmount = .08f;
 
         // Time between Tick() in tetris.
-        private TimeSpan blockTick = TimeSpan.FromSeconds(1);
+        private TimeSpan blockTick = TimeSpan.FromSeconds(.25f);
         private TimeSpan currentTime = TimeSpan.Zero;
 
         private PointerManager pointerManager;
@@ -80,7 +80,9 @@ namespace SharpDXTetris
 
         protected override void LoadContent()
         {
-            projection = Matrix.PerspectiveFovLH(MathUtil.DegreesToRadians(45f), (float)GraphicsDevice.BackBuffer.Width / (float)GraphicsDevice.BackBuffer.Height, 
+            projection = Matrix.PerspectiveFovLH(MathUtil.DegreesToRadians(45f), 
+                (float)GraphicsDevice.BackBuffer.Width / 
+                (float)GraphicsDevice.BackBuffer.Height, 
                 1f, 1000);
 
             baseModel = Content.Load<Model>(@"Models/base");
@@ -106,7 +108,15 @@ namespace SharpDXTetris
                 tetrisModel.Tick(-Vector2.UnitY);
             }
 
-            //var state = pointerManager.GetState();
+            var output = new StringBuilder();
+
+            var state = pointerManager.GetState();
+            foreach (var point in state.Points)
+                output.AppendLine(string.Format("Id:{0} Type:{1} Position:{2}", point.PointerId, point.EventType, point.Position));
+
+            Page.output.Text = output.ToString();
+
+            
             //if (state.Points.Count > 0 && !touchStart.HasValue)
             //{
             //    touchStart = state.Points[0].Position;
@@ -123,15 +133,12 @@ namespace SharpDXTetris
             //    }
             //}
 
-            var state = pointerManager.GetState();
             var presses = state.Points.FindAll(p => p.EventType == PointerEventType.Pressed);
 
             if (presses.Count > 0)
             {
                 ;
             }
-
-
 
             //TODO: Remove adjustable focus
             Focus = (int)Page.focus.Value;
@@ -172,20 +179,6 @@ namespace SharpDXTetris
 
             // Draw base model.
             baseModel.Draw(GraphicsDevice, mirrorXZ, view, projection, baseEffect);
-
-            #region Coordinate indicators
-
-            baseEffect.DiffuseColor = Color.Red.ToVector4();
-            baseModel.Draw(GraphicsDevice, Matrix.Scaling(.1f) * Matrix.Translation(50, 0, 0), view, projection, baseEffect);
-
-            baseEffect.DiffuseColor = Color.Green.ToVector4();
-            baseModel.Draw(GraphicsDevice, Matrix.Scaling(.1f) * Matrix.Translation(0, 50, 0), view, projection, baseEffect);
-
-            baseEffect.DiffuseColor = Color.Blue.ToVector4();
-            baseModel.Draw(GraphicsDevice, Matrix.Scaling(.1f) * Matrix.Translation(0, 0, 50), view, projection, baseEffect);
-
-            #endregion
-
 
             for (int row = 0; row < 20; row++)
             {

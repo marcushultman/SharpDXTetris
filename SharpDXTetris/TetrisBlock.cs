@@ -28,7 +28,14 @@ namespace SharpDXTetris
         {
             foreach (var block in Blocks)
             {
-                yield return Position + block;
+                var absolutePos = Position + block;
+
+                if (absolutePos.X < 0)
+                    absolutePos.X += TetrisModel.Columns;
+                else if (absolutePos.X >= TetrisModel.Columns)
+                    absolutePos.X %= TetrisModel.Columns;
+
+                yield return absolutePos;
             }
         }
 

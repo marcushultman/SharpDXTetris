@@ -7,12 +7,25 @@ using System.Threading.Tasks;
 
 namespace SharpDXTetris
 {
+    static class RowExtension
+    {
+        public static Color? Get(this LinkedList<Color?[]> rows, Vector2 coord)
+        {
+            return rows.ElementAt((int)coord.Y)[(int)coord.X];
+        }
+
+        public static void Set(this LinkedList<Color?[]> rows, Vector2 coord, Color? value)
+        {
+            rows.ElementAt((int)coord.Y)[(int)coord.X] = value;
+        }
+    }
+
     class TetrisModel
     {
         #region
 
-        private const int Rows = 20;
-        private const int Columns = 10;
+        public const int Rows = 20;
+        public const int Columns = 10;
 
         private LinkedList<Color?[]> rows;
 
@@ -52,7 +65,7 @@ namespace SharpDXTetris
         private void NewBlock()
         {
             current = TetrisBlockGenerator.GetBlock();
-            current.Position = new Vector2(1, Rows - 3);
+            current.Position = new Vector2(0, Rows - 3);
 
             foreach (var b in current)
                 rows.ElementAt((int)b.Y)[(int)b.X] = current.Color;
@@ -63,54 +76,30 @@ namespace SharpDXTetris
 
         internal void Tick(Vector2 move)
         {
-            foreach (var b in current)
-                rows.ElementAt((int)b.Y)[(int)b.X % Columns] = null;
+            var next = current.Clone();
+            next.Position += move;
 
-            current.Position += move;
-
-            bool collision = false;
-            List<Vector2> changes = new List<Vector2>();
-            foreach (var b in current)
+            var collision = false;
+            foreach (var subBlock in next.Except(current))
             {
-                // Check Y-position
-                if ((int)b.Y < 0)
+                if (subBlock.Y < 0 || rows.Get(subBlock).HasValue)
                 {
-                    // Collision
                     collision = true;
                     break;
                 }
-
-                // Check block-collsion
-                var row = rows.ElementAt((int)b.Y);
-                if (row[(int)b.X % Columns].HasValue)
-                {
-                    // Collision
-                    collision = true;
-                    break;
-                }
-
-                row[(int)b.X % Columns] = current.Color;
-                changes.Add(b);
             }
 
-            // Reverse the changes
             if (collision)
             {
-                // Roll back the changes made halfway
-                foreach (var change in changes)
-                    rows.ElementAt((int)change.Y)[(int)change.X % Columns] = null;
-                
-                // Reverse positionchange
-                current.Position -= move;
-                
-                // Set back the colors.
-                foreach (var b in current)
-                    rows.ElementAt((int)b.Y)[(int)b.X % Columns] = current.Color;
-
-                // New block
                 NewBlock();
+                return;
             }
 
+            foreach (var subBlock in current.Except(next))
+                rows.Set(subBlock, null);
+            foreach (var subBlock in next.Except(current))
+                rows.Set(subBlock, current.Color);
+            current = next;
         }
 
     }
