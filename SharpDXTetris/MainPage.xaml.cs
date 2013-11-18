@@ -36,5 +36,14 @@ namespace SharpDXTetris
         {
             game.NewGame();
         }
+
+        private void Left(object sender, RoutedEventArgs e)
+        {
+            game.Left();
+        }
+        private void Right(object sender, RoutedEventArgs e)
+        {
+            game.Right();
+        }
     }
 }

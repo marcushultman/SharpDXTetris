@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SharpDXTetris
@@ -28,14 +29,19 @@ namespace SharpDXTetris
         {
             foreach (var block in Blocks)
             {
-                var absolutePos = Position + block;
+                Monitor.Enter(this);
+                lock (this)
+                {
+                    var absolutePos = Position + block;
 
-                if (absolutePos.X < 0)
-                    absolutePos.X += TetrisModel.Columns;
-                else if (absolutePos.X >= TetrisModel.Columns)
-                    absolutePos.X %= TetrisModel.Columns;
+                    if (absolutePos.X < 0)
+                        absolutePos.X += TetrisModel.Columns;
+                    else if (absolutePos.X >= TetrisModel.Columns)
+                        absolutePos.X %= TetrisModel.Columns;
 
-                yield return absolutePos;
+                    yield return absolutePos;
+                }
+                Monitor.Exit(this);
             }
         }
 

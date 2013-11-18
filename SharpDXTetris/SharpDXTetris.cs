@@ -27,11 +27,15 @@ namespace SharpDXTetris
         public float Focus { get; set; }
         private float actualFocus, focusLerpAmount = .08f;
 
+        public float Rotation { get { return tetrisModel.Rotation; } }
+        private float actualRotation, rotationLerpAmount = .08f;
+
         // Time between Tick() in tetris.
         private TimeSpan blockTick = TimeSpan.FromSeconds(.25f);
         private TimeSpan currentTime = TimeSpan.Zero;
 
         private PointerManager pointerManager;
+        private KeyboardManager keyboardManager;
 
         private uint pointId;
         private Vector2? pointStart;
@@ -43,6 +47,8 @@ namespace SharpDXTetris
         // View objects
         private Matrix view, projection;
         private Model baseModel, blockModel;
+
+        private Effect blockEffect;
 
         // Scale our models.
         private Matrix mirrorXZ = Matrix.Scaling(1, -1, -1);
@@ -75,6 +81,7 @@ namespace SharpDXTetris
             tetrisModel = new TetrisModel();
 
             pointerManager = new PointerManager(this);
+            keyboardManager = new KeyboardManager(this);
 
             base.Initialize();
         }
@@ -91,12 +98,14 @@ namespace SharpDXTetris
             BasicEffect.EnableDefaultLighting(baseModel);
             BasicEffect.EnableDefaultLighting(blockModel);
 
+            blockEffect = Content.Load<Effect>(@"Shaders/BlockEffect");
+
             base.LoadContent();
         }
 
         internal void NewGame()
         {
-
+            tetrisModel = new TetrisModel();
         }
 
         protected override void Update(GameTime gameTime)
@@ -106,12 +115,18 @@ namespace SharpDXTetris
             while (currentTime > blockTick)
             {
                 currentTime = currentTime.Subtract(blockTick);
-                tetrisModel.Tick(-Vector2.UnitY);
+                tetrisModel.Update(-Vector2.UnitY);
             }
 
-            var output = new StringBuilder();
+            #region Input
 
             var state = pointerManager.GetState();
+
+            var output = new StringBuilder();
+            foreach (var point in state.Points)
+                output.AppendLine(string.Format("Id:{0} Type:{1} Position:{2} Device:{3}", 
+                    point.PointerId, point.EventType, point.Position, point.DeviceType));
+            Page.output.Text = output.ToString();
 
             // No input
             if (!pointStart.HasValue)
@@ -133,7 +148,7 @@ namespace SharpDXTetris
                 if (Math.Abs(diff.X) > .2f)
                 {
                     pointStart = point.Position;
-                    tetrisModel.Tick(diff.X > 0 ? Vector2.UnitX : -Vector2.UnitX);
+                    tetrisModel.Update(diff.X > 0 ? Vector2.UnitX : -Vector2.UnitX);
                 }
                 
                 
@@ -145,36 +160,12 @@ namespace SharpDXTetris
                 }
             }
 
-            
+            if (keyboardManager.GetState().IsKeyDown(Keys.Left))
+                Left();
+            if (keyboardManager.GetState().IsKeyDown(Keys.Right))
+                Right();
 
-            foreach (var point in state.Points)
-                output.AppendLine(string.Format("Id:{0} Type:{1} Position:{2} Device:{3}", point.PointerId, point.EventType, point.Position, point.DeviceType));
-
-            Page.output.Text = output.ToString();
-
-            
-            //if (state.Points.Count > 0 && !touchStart.HasValue)
-            //{
-            //    touchStart = state.Points[0].Position;
-            //    touchID = state.Points[0].PointerId;
-            //}
-            
-            //if (touchStart.HasValue){
-            //    var current = state.Points.Find(point => point.PointerId == touchID).Position;
-            //    var diff = current - touchStart;
-            //    if (diff.Value.Length() > 100)
-            //    {
-            //        tetrisModel.Tick(diff.Value.X > 0 ? Vector2.UnitX : -Vector2.UnitX);
-            //        touchStart = null;
-            //    }
-            //}
-
-            var presses = state.Points.FindAll(p => p.EventType == PointerEventType.Pressed);
-
-            if (presses.Count > 0)
-            {
-                ;
-            }
+            #endregion
 
             //TODO: Remove adjustable focus
             Focus = (int)Page.focus.Value;
@@ -184,14 +175,27 @@ namespace SharpDXTetris
             // Update vertical focus
             actualFocus = MathUtil.Lerp(actualFocus, Focus, focusLerpAmount);
 
+            // Update rotation
+            actualRotation = MathUtil.Lerp(actualRotation, Rotation, rotationLerpAmount);
+
             // View matrix
-            var eye = new Vector3(0, 50, -actualFocus / 1.2f - 200);
+            var eye = Vector3.TransformCoordinate(new Vector3(0, 50, -actualFocus / 1.2f - 200), Matrix.RotationY(actualRotation));
             var target = new Vector3(0, MathUtil.Lerp(actualFocus, 50, .5f), 0);
             view = Matrix.LookAtLH(eye, target, Vector3.Up);
 
             #endregion
 
             base.Update(gameTime);
+        }
+
+        internal void Left()
+        {
+            tetrisModel.Update(-Vector2.UnitX);
+        }
+
+        internal void Right()
+        {
+            tetrisModel.Update(Vector2.UnitX);
         }
 
         BasicEffect baseEffect;
@@ -216,14 +220,14 @@ namespace SharpDXTetris
             // Draw base model.
             baseModel.Draw(GraphicsDevice, mirrorXZ, view, projection, baseEffect);
 
-            for (int row = 0; row < 20; row++)
+            for (int row = 0; row < TetrisModel.Rows; row++)
             {
-                for (int col = 0; col < 10; col++)
+                for (int col = 0; col < TetrisModel.Columns; col++)
                 {
                     var block = tetrisModel.BlockAt(row, col);
                     if (block.HasValue)
                     {
-                        var world = Matrix.RotationY(col * (float)Math.PI / 5f) * Matrix.Translation(0, -10 * row, 0) * mirrorXZ;
+                        var world = Matrix.RotationY(col * MathUtil.TwoPi / (float)TetrisModel.Columns) * Matrix.Translation(0, -10 * row, 0) * mirrorXZ;
                         blockModel.ForEach(part => (part.Effect as BasicEffect).DiffuseColor = block.Value.ToVector4());
                         blockModel.Draw(GraphicsDevice, world, view, projection);
                     }
@@ -238,9 +242,7 @@ namespace SharpDXTetris
             //}
 
             
-
             base.Draw(gameTime);
         }
-
     }
 }

@@ -31,23 +31,18 @@ namespace SharpDXTetris
 
         private TetrisBlock current;
 
-
-
-        //public IEnumerable<TetrisBlock> Blocks
-        //{
-        //    get
-        //    {
-        //        return rows.SelectMany(row => row)
-        //            .Concat(
-        //            current.Blocks.Select(block => { block.Position += current.Position; return block; }));
-        //    }
-        //}
-
         public Color? BlockAt(int row, int column)
         {
             return rows.ElementAt(row)[column];
         }
 
+        public float Rotation
+        {
+            get
+            {
+                return -MathUtil.TwoPi * current.Position.X / (float)Columns;
+            }
+        }
 
         #endregion
 
@@ -74,7 +69,7 @@ namespace SharpDXTetris
         #endregion
 
 
-        internal void Tick(Vector2 move)
+        internal void Update(Vector2 move)
         {
             var next = current.Clone();
             next.Position += move;
