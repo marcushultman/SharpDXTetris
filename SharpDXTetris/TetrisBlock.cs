@@ -11,7 +11,7 @@ namespace SharpDXTetris
 {
     class TetrisBlock : IEnumerable<Vector2>
     {
-        public List<Vector2> Blocks { get; set; }
+        private List<Vector2> blocks;
         public Vector2 Position { get; set; }
         public Color Color { get; set; }
 
@@ -19,7 +19,7 @@ namespace SharpDXTetris
         {
             return new TetrisBlock
             {
-                Blocks = new List<Vector2>(this.Blocks),
+                blocks = new List<Vector2>(this.blocks),
                 Position = this.Position,
                 Color = this.Color
             };
@@ -27,16 +27,17 @@ namespace SharpDXTetris
 
         IEnumerator<Vector2> IEnumerable<Vector2>.GetEnumerator()
         {
-            foreach (var block in Blocks)
+            foreach (var block in blocks)
             {
                 Monitor.Enter(this);
                 lock (this)
                 {
                     var absolutePos = Position + block;
 
-                    if (absolutePos.X < 0)
+                    while (absolutePos.X < 0)
                         absolutePos.X += TetrisModel.Columns;
-                    else if (absolutePos.X >= TetrisModel.Columns)
+
+                    if (absolutePos.X >= TetrisModel.Columns)
                         absolutePos.X %= TetrisModel.Columns;
 
                     yield return absolutePos;
@@ -49,87 +50,87 @@ namespace SharpDXTetris
         {
             return (this as IEnumerable<Vector2>).GetEnumerator();
         }
-    }
-
-    class TetrisBlockGenerator
-    {
-        private static TetrisBlock[] blocks = new []{
-            new TetrisBlock{
-                Blocks = new List<Vector2>{
-                    new Vector2(-1,0),
-                    new Vector2(),
-                    new Vector2(1,0),
-                    new Vector2(2,0)
-                },
-                Color = Color.Cyan
-            },
-            new TetrisBlock{
-                Blocks = new List<Vector2>{
-                    new Vector2(-1,-1),
-                    new Vector2(-1,0),
-                    new Vector2(),
-                    new Vector2(1,0)
-                },
-                Color = Color.Blue
-            },
-            new TetrisBlock{
-                Blocks = new List<Vector2>{
-                    new Vector2(-1,0),
-                    new Vector2(),
-                    new Vector2(1,0),
-                    new Vector2(1,-1)
-                },
-                Color = Color.Orange
-            },
-            new TetrisBlock{
-                Blocks = new List<Vector2>{
-                    new Vector2(0,-1),
-                    new Vector2(),
-                    new Vector2(1,-1),
-                    new Vector2(1,0)
-                },
-                Color = Color.Yellow
-            },
-            new TetrisBlock{
-                Blocks = new List<Vector2>{
-                    new Vector2(-1,0),
-                    new Vector2(),
-                    new Vector2(0,-1),
-                    new Vector2(1,-1)
-                },
-                Color = Color.Green
-            },
-            new TetrisBlock{
-                Blocks = new List<Vector2>{
-                    new Vector2(-1,0),
-                    new Vector2(),
-                    new Vector2(0,-1),
-                    new Vector2(1,0)
-                },
-                Color = Color.Purple
-            },
-            new TetrisBlock{
-                Blocks = new List<Vector2>{
-                    new Vector2(-1,-1),
-                    new Vector2(0,-1),
-                    new Vector2(),
-                    new Vector2(1,0)
-                },
-                Color = Color.Red
-            },
-        };
 
 
-        private static Random random = new Random();
-
-        public static TetrisBlock GetBlock()
+        public class TetrisBlockGenerator
         {
-            return GetBlock(random.Next(blocks.Length));
-        }
+            private static TetrisBlock[] blocks = new[]{
+                new TetrisBlock{
+                    blocks = new List<Vector2>{
+                        new Vector2(-1,0),
+                        new Vector2(),
+                        new Vector2(1,0),
+                        new Vector2(2,0)
+                    },
+                    Color = Color.Cyan
+                },
+                new TetrisBlock{
+                    blocks = new List<Vector2>{
+                        new Vector2(-1,-1),
+                        new Vector2(-1,0),
+                        new Vector2(),
+                        new Vector2(1,0)
+                    },
+                    Color = Color.Blue
+                },
+                new TetrisBlock{
+                    blocks = new List<Vector2>{
+                        new Vector2(-1,0),
+                        new Vector2(),
+                        new Vector2(1,0),
+                        new Vector2(1,-1)
+                    },
+                    Color = Color.Orange
+                },
+                new TetrisBlock{
+                    blocks = new List<Vector2>{
+                        new Vector2(0,-1),
+                        new Vector2(),
+                        new Vector2(1,-1),
+                        new Vector2(1,0)
+                    },
+                    Color = Color.Yellow
+                },
+                new TetrisBlock{
+                    blocks = new List<Vector2>{
+                        new Vector2(-1,0),
+                        new Vector2(),
+                        new Vector2(0,-1),
+                        new Vector2(1,-1)
+                    },
+                    Color = Color.Green
+                },
+                new TetrisBlock{
+                    blocks = new List<Vector2>{
+                        new Vector2(-1,0),
+                        new Vector2(),
+                        new Vector2(0,-1),
+                        new Vector2(1,0)
+                    },
+                    Color = Color.Purple
+                },
+                new TetrisBlock{
+                    blocks = new List<Vector2>{
+                        new Vector2(-1,-1),
+                        new Vector2(0,-1),
+                        new Vector2(),
+                        new Vector2(1,0)
+                    },
+                    Color = Color.Red
+                },
+            };
 
-        public static TetrisBlock GetBlock(int style)
-        {
-            return blocks[style].Clone();
+            private static Random random = new Random();
+
+            public static TetrisBlock GetBlock()
+            {
+                return GetBlock(random.Next(blocks.Length));
+            }
+
+            public static TetrisBlock GetBlock(int style)
+            {
+                return blocks[style].Clone();
+            }
         }
     }
 }

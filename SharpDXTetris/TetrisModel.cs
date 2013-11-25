@@ -59,12 +59,30 @@ namespace SharpDXTetris
 
         private void NewBlock()
         {
-            current = TetrisBlockGenerator.GetBlock();
+            // Remove filled rows
+            if (current != null)
+            {
+                var changedRows = current.Select<Vector2, int>(block => (int)block.Y);
+                foreach (var changedRow in changedRows.Select(index => rows.ElementAt(index)))
+                {
+                    if (changedRow.All(block => block.HasValue))
+                    {
+                        rows.Remove(changedRow);
+                        rows.AddLast(new Color?[Columns]);
+                    }   
+                }
+            }
+
+
+            current = TetrisBlock.TetrisBlockGenerator.GetBlock(3);
             current.Position = new Vector2(0, Rows - 3);
 
             foreach (var b in current)
+            {
                 rows.ElementAt((int)b.Y)[(int)b.X] = current.Color;
+            }
         }
+
 
         #endregion
 
@@ -75,6 +93,7 @@ namespace SharpDXTetris
             next.Position += move;
 
             var collision = false;
+
             foreach (var subBlock in next.Except(current))
             {
                 if (subBlock.Y < 0 || rows.Get(subBlock).HasValue)

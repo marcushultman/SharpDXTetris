@@ -31,7 +31,7 @@ namespace SharpDXTetris
         private float actualRotation, rotationLerpAmount = .08f;
 
         // Time between Tick() in tetris.
-        private TimeSpan blockTick = TimeSpan.FromSeconds(.25f);
+        private TimeSpan blockTick = TimeSpan.FromSeconds(.2f);
         private TimeSpan currentTime = TimeSpan.Zero;
 
         private PointerManager pointerManager;
