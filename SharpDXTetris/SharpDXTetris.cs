@@ -218,7 +218,7 @@ namespace SharpDXTetris
             }
 
             // Draw base model.
-            baseModel.Draw(GraphicsDevice, mirrorXZ, view, projection, baseEffect);
+            baseModel.Draw(GraphicsDevice, mirrorXZ, view, projection, blockEffect); // baseEffect);
 
             for (int row = 0; row < TetrisModel.Rows; row++)
             {
