@@ -48,6 +48,7 @@ namespace SharpDXTetris
         private Matrix view, projection;
         private Model baseModel, blockModel;
 
+        private Model boxUVModel;
         private Effect blockEffect;
 
         // Scale our models.
@@ -98,7 +99,11 @@ namespace SharpDXTetris
             BasicEffect.EnableDefaultLighting(baseModel);
             BasicEffect.EnableDefaultLighting(blockModel);
 
+            boxUVModel = Content.Load<Model>(@"Models/buxuv");
+
             blockEffect = Content.Load<Effect>(@"Shaders/BlockEffect");
+            blockEffect.Parameters["TestTexture"].SetResource<Texture2D>(Content.Load<Texture2D>("checker"));
+
 
             base.LoadContent();
         }
@@ -198,8 +203,6 @@ namespace SharpDXTetris
             tetrisModel.Update(Vector2.UnitX);
         }
 
-        BasicEffect baseEffect;
-
         protected override void Draw(GameTime gameTime)
         {
             // Use time in seconds directly
@@ -208,22 +211,18 @@ namespace SharpDXTetris
             // Clears the screen with the Color.CornflowerBlue
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            if (baseEffect == null)
-            {
-                baseEffect = new BasicEffect(GraphicsDevice)
-                {
-                    DiffuseColor = Color.Salmon.ToVector4()
-                };
-                baseEffect.EnableDefaultLighting();
-            }
-
             // Draw base model.
-            baseModel.Draw(GraphicsDevice, mirrorXZ, view, projection, blockEffect); // baseEffect);
 
+            boxUVModel.Draw(GraphicsDevice, Matrix.Identity, Matrix.LookAtLH(Vector3.TransformCoordinate(new Vector3(0, 5, 15), Matrix.RotationY(time)), Vector3.Zero, Vector3.Up), projection, blockEffect);
+            
+            //baseModel.Draw(GraphicsDevice, mirrorXZ, view, projection, blockEffect); // baseEffect);
+
+            // Itterate the grid
             for (int row = 0; row < TetrisModel.Rows; row++)
             {
+                break;
                 for (int col = 0; col < TetrisModel.Columns; col++)
-                {
+                {   
                     var block = tetrisModel.BlockAt(row, col);
                     if (block.HasValue)
                     {
@@ -234,14 +233,6 @@ namespace SharpDXTetris
                 }
             }
 
-            //foreach (var block in tetrisModel.Blocks)
-            //{
-            //    var world = Matrix.RotationY(block.Position.X * (float)Math.PI / 5f) * Matrix.Translation(0, 10 * (currentBlock.Position.Y + block.Position.Y), 0) * Matrix.RotationZ(MathUtil.Pi);
-            //    blockModel.ForEach(part => (part.Effect as BasicEffect).DiffuseColor = block.Color.ToVector4());
-            //    blockModel.Draw(GraphicsDevice, world, view, projection);
-            //}
-
-            
             base.Draw(gameTime);
         }
     }
