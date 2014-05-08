@@ -1,37 +1,32 @@
-﻿Texture2D<float4> TestTexture : register(t0);
-sampler TestSampler : register(s0);
+﻿
+Texture2D<float4> Texture : register(t0);
+sampler TextureSampler : register(s0);
 
 float4x4 WorldViewProj;
 
 struct VS_IN{
-	float4 Position : SV_Position;
-	float2 TexCoord  : TEXCOORD0;
-};
-
-struct VS_OUT{
-	float4 Position : SV_Position;
+	float4 Position : SV_POSITION;
 	float2 TexCoord  : TEXCOORD0;
 };
 
 struct PS_IN{
+	float4 Position : SV_POSITION;
 	float2 TexCoord  : TEXCOORD0;
 };
 
-VS_OUT VS_MAIN(VS_IN input)
+PS_IN VS_MAIN(VS_IN input)
 {
-	VS_OUT output = (VS_OUT) 0;
+	PS_IN output = (PS_IN) 0;
 
 	output.Position = mul(input.Position, WorldViewProj);
-	//output.PositionCopy = input.Position;
-
 	output.TexCoord = input.TexCoord;
 
 	return output;
 }
 
-float4 PS_MAIN(PS_IN input) : SV_Target0
+float4 PS_MAIN(PS_IN input) : SV_Target
 {
-	return TestTexture.Sample(TestSampler, input.TexCoord);
+	return Texture.Sample(TextureSampler, input.TexCoord);
 }
 
 technique{

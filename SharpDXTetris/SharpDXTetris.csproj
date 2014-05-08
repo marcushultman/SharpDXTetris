@@ -47,6 +47,7 @@
   <ItemGroup>
     <ToolkitModel Include="Content\Models\block.FBX" />
     <ToolkitModel Include="Content\Models\buxuv.FBX" />
+    <ToolkitModel Include="Content\Ship.fbx" />
     <None Include="SharpDXTetris_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
@@ -80,6 +81,7 @@
     <Content Include="Assets\SmallLogo.png" />
     <Content Include="Assets\SplashScreen.png" />
     <Content Include="Assets\StoreLogo.png" />
+    <ToolkitTexture Include="Content\ShipDiffuse.dds" />
     <ToolkitTexture Include="Content\checker.png" />
     <ToolkitFxc Include="Content\Shaders\BlockEffect.fx" />
   </ItemGroup>

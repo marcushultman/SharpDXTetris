@@ -48,7 +48,6 @@ namespace SharpDXTetris
         private Matrix view, projection;
         private Model baseModel, blockModel;
 
-        private Model boxUVModel;
         private Effect blockEffect;
 
         // Scale our models.
@@ -99,11 +98,10 @@ namespace SharpDXTetris
             BasicEffect.EnableDefaultLighting(baseModel);
             BasicEffect.EnableDefaultLighting(blockModel);
 
-            boxUVModel = Content.Load<Model>(@"Models/buxuv");
-
             blockEffect = Content.Load<Effect>(@"Shaders/BlockEffect");
-            blockEffect.Parameters["TestTexture"].SetResource<Texture2D>(Content.Load<Texture2D>("checker"));
 
+            var texture = Content.Load<Texture2D>("checker");
+            blockEffect.Parameters["Texture"].SetResource(texture);
 
             base.LoadContent();
         }
@@ -213,14 +211,11 @@ namespace SharpDXTetris
 
             // Draw base model.
 
-            boxUVModel.Draw(GraphicsDevice, Matrix.Identity, Matrix.LookAtLH(Vector3.TransformCoordinate(new Vector3(0, 5, 15), Matrix.RotationY(time)), Vector3.Zero, Vector3.Up), projection, blockEffect);
-            
-            //baseModel.Draw(GraphicsDevice, mirrorXZ, view, projection, blockEffect); // baseEffect);
+            baseModel.Draw(GraphicsDevice, Matrix.Identity, view, projection);
 
             // Itterate the grid
             for (int row = 0; row < TetrisModel.Rows; row++)
             {
-                break;
                 for (int col = 0; col < TetrisModel.Columns; col++)
                 {   
                     var block = tetrisModel.BlockAt(row, col);
